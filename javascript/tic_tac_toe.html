@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tic Tac Toe</title>
+    <script>
+	 
+		
+        const BOARD_SIZE = 9; 
+
+        // Create a tic-tac-toe board
+        function createBoard(board, template) {
+            let output = template;
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                const token = `{${i}}`;
+                output = output.replace(new RegExp(`\\{${i}\\}`, 'g'), ' '+board[i]+' ');
+            }
+            return output;
+        }
+
+        // Check for a win condition
+        function checkWin(player, board) {
+            const winConditions = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+
+            for (let i = 0; i < winConditions.length; i++) {
+                if (board[winConditions[i][0]] === player &&
+                    board[winConditions[i][1]] === player &&
+                    board[winConditions[i][2]] === player) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // Bot player to make a move
+        function botPlayer(board) {
+            const winConditions = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+
+            if (board[4] === ' ') {
+                return 4; // Middle move
+            }
+
+            const blockableMoves = [];
+            for (let i = 0; i < winConditions.length; i++) {
+                let xCount = 0;
+                let emptyIndex = -1;
+
+                for (let j = 0; j < 3; j++) {
+                    if (board[winConditions[i][j]] === 'X') {
+                        xCount++;
+                    } else if (board[winConditions[i][j]] === ' ') {
+                        emptyIndex = winConditions[i][j];
+                    }
+                }
+
+                if (xCount === 2 && emptyIndex !== -1) {
+                    return emptyIndex; // Block winning move
+                }
+
+                if (xCount === 1 && emptyIndex !== -1) {
+                    blockableMoves.push(emptyIndex);
+                }
+            }
+
+            // Return the first valid move
+            return blockableMoves.length > 0 ? blockableMoves[0] : -1;
+        }
+
+        // Main game loop
+        function ticTacToe() {
+            const boardTemplate =
+                `       0     1     2
+    +-----+-----+-----+
+    | {0} | {1} | {2} |
+    +-----+-----+-----+
+  3 | {3} | {4} | {5} |
+    +-----+-----+-----+
+    | {6} | {7} | {8} |
+    +-----+-----+-----+
+       6     7     8`;
+
+            const squares = new Array(BOARD_SIZE).fill(' ');
+            const players = ['X', 'O'];
+            let currentPlayer = 0;
+
+            while (true) {
+                console.clear(); // Clear the console
+                const formattedBoard = createBoard(squares, boardTemplate);
+                console.log(formattedBoard);
+
+                if (checkWin(players[currentPlayer], squares)) {
+                    console.log(`Player ${players[currentPlayer]} is the winner!`);
+                    break;
+                }
+
+                // Check for a tie
+                const hasEmptySpot = squares.some(sq => sq === ' ');
+                if (!hasEmptySpot) {
+                    console.log("Cat's game!");
+                    break;
+                }
+
+                let move = -1;
+                if (currentPlayer === 0) {
+                    do {
+						
+                         const input = prompt(`Player ${players[currentPlayer]} to move [0-8] > `);
+                          
+                        move = parseInt(input);
+
+                        if (isNaN(move) || move < 0 || move > 8 || squares[move] !== ' ') {
+                            console.log("Invalid move!");
+                            move = -1;
+                        }
+                    } while (move === -1);
+                } else {
+                    move = botPlayer(squares);
+                }
+
+                squares[move] = players[currentPlayer];
+
+                if (checkWin(players[currentPlayer], squares)) {
+                    console.log(`Player ${players[currentPlayer]} is the winner!`);
+                    break;
+                }
+
+                currentPlayer = (currentPlayer + 1) % 2; // Switch player
+            }
+        }
+
+        document.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') { 
+           ticTacToe();
+       }
+      });
+ 
+    </script>
+</head>
+<body>
+	<h3>Open Dev Tool Console and press Enter to start</h3>
+</body>
+</html>

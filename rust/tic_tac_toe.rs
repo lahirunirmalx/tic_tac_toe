@@ -2,36 +2,32 @@ use std::io::{self, Write};
 
 const BOARD_SIZE: usize = 9;
 
-fn create_board(board: &[char; BOARD_SIZE], template: &str, output: &mut String) {
-    *output = template.to_string();
+fn create_board(board: &[char; BOARD_SIZE], template: &str) -> String {
+    let mut output = template.to_string();
     for i in 0..BOARD_SIZE {
         let token = format!("{{{}}}", i);
-        *output = output.replace(&token, &board[i].to_string());
+        output = output.replace(&token, &board[i].to_string());
     }
+    output
 }
 
 fn check_win(player: char, board: &[char; BOARD_SIZE]) -> bool {
     let win_conditions = [
         [0, 1, 2], [3, 4, 5], [6, 7, 8],
         [0, 3, 6], [1, 4, 7], [2, 5, 8],
-        [0, 4, 8], [2, 4, 6]
+        [0, 4, 8], [2, 4, 6],
     ];
 
-    for condition in win_conditions.iter() {
-        if board[condition[0]] == player &&
-           board[condition[1]] == player &&
-           board[condition[2]] == player {
-            return true;
-        }
-    }
-    false
+    win_conditions.iter().any(|&condition| {
+        condition.iter().all(|&index| board[index] == player)
+    })
 }
 
 fn bot_player(board: &[char; BOARD_SIZE]) -> usize {
     let win_conditions = [
         [0, 1, 2], [3, 4, 5], [6, 7, 8],
         [0, 3, 6], [1, 4, 7], [2, 5, 8],
-        [0, 4, 8], [2, 4, 6]
+        [0, 4, 8], [2, 4, 6],
     ];
 
     if board[4] == ' ' {
@@ -40,14 +36,14 @@ fn bot_player(board: &[char; BOARD_SIZE]) -> usize {
 
     let mut blockable_moves = Vec::new();
 
-    for condition in win_conditions.iter() {
+    for &condition in &win_conditions {
         let mut x_count = 0;
         let mut empty_index = None;
-        for &index in condition.iter() {
-            if board[index] == 'X' {
-                x_count += 1;
-            } else if board[index] == ' ' {
-                empty_index = Some(index);
+        for &index in &condition {
+            match board[index] {
+                'X' => x_count += 1,
+                ' ' => empty_index = Some(index),
+                _ => {}
             }
         }
 
@@ -65,7 +61,7 @@ fn bot_player(board: &[char; BOARD_SIZE]) -> usize {
     }
 
     // Return the first valid move
-    blockable_moves[0]
+    *blockable_moves.first().unwrap_or(&0)
 }
 
 fn main() {
@@ -83,11 +79,10 @@ fn main() {
     let mut squares = [' '; BOARD_SIZE];
     let players = ['X', 'O'];
     let mut current_player = 0;
-    let mut formatted_board = String::new();
 
     loop {
         print!("\x1B[2J\x1B[1;1H"); // Clear the console
-        create_board(&squares, board_template, &mut formatted_board);
+        let formatted_board = create_board(&squares, board_template);
         println!("{}", formatted_board);
 
         if check_win(players[current_player], &squares) {
@@ -119,12 +114,6 @@ fn main() {
         };
 
         squares[move_index] = players[current_player];
-
-        if check_win(players[current_player], &squares) {
-            println!("Player {} is the winner!", players[current_player]);
-            break;
-        }
-
         current_player = (current_player + 1) % 2;
     }
 }

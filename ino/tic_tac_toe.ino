@@ -15,7 +15,9 @@
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-
+void createBoard(char board[], const char *template1, char *output1) ;
+bool checkWin(char player, char board[]);
+int botPlayer(char board[]);
 
 const uint8_t ROWS = 4;
 const uint8_t COLS = 4;
@@ -31,15 +33,15 @@ uint8_t rowPins[ROWS] = { 19, 18, 4, 5 }; // Pins connected to R1, R2, R3, R4
 
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 char boardTemplate[] = 
-        "       0     1     2\n"
-        "    +-----+-----+-----+\n"
-        "    | {0} | {1} | {2} |\n"
-        "    +-----+-----+-----+\n"
-        "  3 | {3} | {4} | {5} | 5\n"
-        "    +-----+-----+-----+\n"
-        "    | {6} | {7} | {8} |\n"
-        "    +-----+-----+-----+\n"
-        "       6     7     8\n"; 
+        "      0   1   2\n"
+        "    +---+---+---+\n"
+        "    |{0}|{1}|{2}|\n"
+        "    +---+---+---+\n"
+        "  3 |{3}|{4}|{5}| 5\n"
+        "    +---+---+---+\n"
+        "    |{6}|{7}|{8}|\n"
+        "    +---+---+---+\n"
+        "      6   7   8\n"; 
     char players[2] = {'X', 'O'};
     int currentPlayer = 0;
     char formattedBoard[1024];
@@ -56,7 +58,7 @@ void setup() {
   display.setTextSize(1);           
   display.setTextColor(SSD1306_WHITE);      
   display.setCursor(0,0); 
-  display.println(F(boardTemplate));
+  //display.println(F(boardTemplate));
   display.display();
     
     for (int i = 0; i < BOARD_SIZE; i++) {
@@ -72,16 +74,19 @@ void loop() {
   display.setTextSize(1);           
   display.setTextColor(SSD1306_WHITE);      
   display.setCursor(0,0); 
-        createBoard(squares, boardTemplate, formattedBoard);
-        display.print("%s\n", formattedBoard);
-
+  createBoard(squares, boardTemplate, formattedBoard);
+  display.println(F(formattedBoard));
+  display.display();
         if (checkWin(players[currentPlayer], squares)) {
            display.clearDisplay();
   display.setTextSize(1);           
   display.setTextColor(SSD1306_WHITE);      
   display.setCursor(0,0); 
-            display.print("Player %c is the winner!\n", players[currentPlayer]);
-            break;
+  char token[25] ;
+  snprintf(token, sizeof(token), "Player %c is the winner!", players[currentPlayer]);
+            display.println(F(token));
+            display.display();
+             for (;;);
         }
 
         // Check for tie
@@ -99,18 +104,20 @@ void loop() {
   display.setTextColor(SSD1306_WHITE);      
   display.setCursor(0,0);
              display.print("Cat's game!\n");
-            break;
+             display.display();
+             for (;;);
         }
-
+        Serial.println("here"); 
         int move = -1;
         if (currentPlayer == 0) { // Player 1 input
             do {  
               move = keypad.getKey();
-                if (  key == NO_KEY || move < 0 || move > 8 || squares[move] != ' ') {
+              Serial.println(move);
+                if (  move == NO_KEY || move < 0 || move > 8 || squares[move] != ' ') {
                     display.print("Invalid move!\n"); 
-                    move = -1;
+                    move = NO_KEY;
                 }
-            } while (move == -1);
+            } while (move == NO_KEY);
         } else { // Bot move
             move = botPlayer(squares);
         }
@@ -122,28 +129,30 @@ void loop() {
   display.setTextSize(1);           
   display.setTextColor(SSD1306_WHITE);      
   display.setCursor(0,0);
-            display.print("Player %c is the winner!\n", players[currentPlayer]);
-            break;
+  char token[25] ;
+  snprintf(token, sizeof(token), "Player %c is the winner!", players[currentPlayer]);
+             display.println(F(token));
+            for (;;);
         }
 
         // Switch player
         currentPlayer = (currentPlayer + 1) % 2;
-         
+         display.display();
 }
 
 
 
 // Create a tic-tac-toe board
-void createBoard(char board[], const char *template, char *output) {
-    strcpy(output, template);
+void createBoard(char board[], const char *template1, char *output1) {
+    strcpy(output1, template1);
     for (int i = 0; i < BOARD_SIZE; i++) {
         char token[4];
         snprintf(token, sizeof(token), "{%d}", i);
-        for (int j = 0; j < strlen(output); j++) {
-            if (output[j] == '{' && output[j + 1] == (char) ('0' + i) && output[j + 2] == '}') {
-                output[j] = board[i];
-                output[j + 1] = ' ';
-                output[j + 2] = ' ';
+        for (int j = 0; j < strlen(output1); j++) {
+            if (output1[j] == '{' && output1[j + 1] == (char) ('0' + i) && output1[j + 2] == '}') {
+                output1[j] = board[i];
+                output1[j + 1] = ' ';
+                output1[j + 2] = ' ';
             }
         }
     }

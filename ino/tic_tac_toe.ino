@@ -109,13 +109,15 @@ void loop() {
         }
         Serial.println("here"); 
         int move = -1;
-        if (currentPlayer == 0) { // Player 1 input
+        if (currentPlayer == 0) {
+           move = keypad.getKey(); // Player 1 input
             do {  
-              move = keypad.getKey();
+             
               Serial.println(move);
                 if (  move == NO_KEY || move < 0 || move > 8 || squares[move] != ' ') {
                     display.print("Invalid move!\n"); 
-                    move = NO_KEY;
+                    //move = NO_KEY;
+                    move = keypad.getKey();
                 }
             } while (move == NO_KEY);
         } else { // Bot move
